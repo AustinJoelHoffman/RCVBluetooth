@@ -1,0 +1,223 @@
+// AFMotor R4 Compatible Library - Basic Motor Test
+// Hardware Setup: DC Motor connected to M1 and M2
+// Modified from original for specific application tests
+
+#include "AFMotor_R4.h"
+
+char cmd;
+int speed = 200;
+
+AF_DCMotor motorL(1);  // Left
+AF_DCMotor motorR(2);  // Right
+
+void setup() {
+
+  Serial.begin(9600);           
+  Serial.println("Basic Motor Test!");
+
+  // Set initial speed and release motor
+  motorL.setSpeed(200);
+  motorL.run(RELEASE);
+
+  motorR.setSpeed(200);
+  motorR.run(RELEASE);
+}
+/*
+void loop() {
+  uint8_t i;
+  
+  if (Serial.available()) {
+    char c = Serial.read();
+    Serial.print("Received: ");
+    Serial.println(c);
+  }
+
+  Serial.println("Running forward..."); 
+  
+  motorL.run(FORWARD);
+  motorR.run(FORWARD);
+  
+  for (i = 0; i < 255; i++) {
+    motorL.setSpeed(i);  
+    motorR.setSpeed(i);  
+    delay(10);
+  }
+ 
+  for (i = 255; i != 0; i--) {
+    motorL.setSpeed(i);
+    motorR.setSpeed(i);  
+    delay(10);
+  }
+  
+  Serial.println("Running backward...");
+  
+  motorL.run(BACKWARD);
+  motorR.run(BACKWARD);
+
+  for (i = 0; i < 255; i++) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+ 
+  for (i = 255; i != 0; i--) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+  
+  Serial.println("Skid Left...");
+  
+  motorL.run(FORWARD);
+  motorR.run(RELEASE);
+
+  for (i = 0; i < 255; i++) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+ 
+  for (i = 255; i != 0; i--) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+  
+  Serial.println("Skid Right...");
+  
+  motorL.run(RELEASE);
+  motorR.run(FORWARD);
+
+  for (i = 0; i < 255; i++) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+ 
+  for (i = 255; i != 0; i--) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+
+  Serial.println("Spin Left...");
+  
+  motorL.run(BACKWARD);
+  motorR.run(FORWARD);
+
+  for (i = 0; i < 255; i++) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+ 
+  for (i = 255; i != 0; i--) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+
+  Serial.println("Spin Right...");
+  
+  motorL.run(FORWARD);
+  motorR.run(BACKWARD);
+
+  for (i = 0; i < 255; i++) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+ 
+  for (i = 255; i != 0; i--) {
+    motorL.setSpeed(i); 
+    motorR.setSpeed(i);
+    delay(10);
+  }
+
+  Serial.println("Braking...");
+  motorL.run(BRAKE);
+  motorR.run(BRAKE);
+  delay(1000);
+  
+  Serial.println("Releasing...");
+  motorL.run(RELEASE);
+  motorR.run(RELEASE);
+  delay(1000);
+
+  while(1)
+} */
+
+void loop () {
+  if (Serial.available()) {
+      cmd = Serial.read();
+      speed = cmd - '0';
+  }
+
+  if (speed == 0) {  // Speed 0
+      motorL.setSpeed(0);
+      motorR.setSpeed(0);
+      Serial.println("Speed: Off");
+  }                                  // TODO: 50 is to low to drive wheels
+  else if (speed == 2) {  // Slow
+    motorL.setSpeed(150);
+    motorR.setSpeed(150);
+    Serial.println("Speed: Slow");
+  }
+  else if (speed == 3) {  // Fast
+    motorL.setSpeed(250);
+    motorR.setSpeed(250);
+    Serial.println("Speed: Fast");
+  }
+  else {}
+
+  if (cmd == 'F') {  // Forward
+    motorL.run(FORWARD);
+    motorR.run(FORWARD);
+    Serial.println(cmd);
+    delay(500);
+  }
+  else if (cmd == 'B') {  // Backward
+    motorL.run(BACKWARD);
+    motorR.run(BACKWARD);
+    Serial.println(cmd);
+    delay(500);
+  }
+  else if (cmd == 'L') {  // Skid Left
+    motorL.run(FORWARD);
+    motorR.run(RELEASE);
+    Serial.println(cmd);
+    delay(500);
+  }
+  else if (cmd == 'R') {  // Skid Right
+    motorL.run(RELEASE);
+    motorR.run(FORWARD);
+    Serial.println(cmd);
+    delay(500);
+  }
+  else if (cmd == 'Q') {  // Spin Left
+    motorL.run(FORWARD);
+    motorR.run(BACKWARD);
+    Serial.println(cmd);
+    delay(500);
+  }
+  else if (cmd == 'E') {  // Spin Left
+    motorL.run(FORWARD);
+    motorR.run(BACKWARD);
+    Serial.println(cmd);
+    delay(500);
+  }
+  else if (cmd == 'P') {  // Release
+    motorL.run(RELEASE);
+    motorR.run(RELEASE);
+    Serial.println(cmd);
+    delay(500);
+  }
+  else if (cmd == 'S') {  // Stop
+    motorL.run(BRAKE);
+    motorR.run(BRAKE);
+    Serial.println(cmd);
+    delay(500);
+  }
+  else{}
+  speed = 9;  // Reset speed input
+}
