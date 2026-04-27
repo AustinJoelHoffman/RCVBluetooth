@@ -1,0 +1,108 @@
+/*
+ * RCV Skid Steer Firmware
+*/
+
+#include <SoftwareSerial.h>
+#include <AFMotor_R4.h>
+
+SoftwareSerial BT(A0, A1);  // A0 (RX), A1 (TX)
+
+AF_DCMotor motorL(1);
+AF_DCMotor motorR(2);
+
+// Watchdog
+unsigned long lastPacketMs = 0;
+const unsigned long watchdogTimeout = 1000;  
+
+// Modes
+enum MotionMode { MODE_STOP, MODE_FWD, MODE_BWD, MODE_PIVOT_L, MODE_PIVOT_R, MODE_SPIN_L, MODE_SPIN_R };
+MotionMode mode = MODE_STOP;
+int targetSpeed = 0;
+int currentSpeed = 0;
+
+
+// Start
+void setup() {
+  Serial.begin(9600);
+  BT.begin(9600);
+  pinMode(13, OUTPUT);
+  lastPacketMs = millis();
+  Serial.println("Bluettoth - RCV Ready");
+}
+
+
+// Main
+void loop() {
+  // Watchdog
+  if (millis() - lastPacketMs > watchdogTimeout) {
+    if (mode != MODE_STOP) {
+      mode = MODE_STOP;
+      targetSpeed = 0;
+      Serial.println("Watchdog Timeout");
+    }
+  }
+
+  // Cmd Parsing
+  if (BT.available()) {
+    byte op = BT.read();
+    lastPacketMs = millis();
+
+    switch (op) {
+      case 0x00: mode = MODE_STOP; targetSpeed = 0; break;
+      case 0x01: mode = MODE_FWD; break;
+      case 0x02: mode = MODE_BWD; break;
+      case 0x03: mode = MODE_PIVOT_L; break;
+      case 0x04: mode = MODE_PIVOT_R; break;
+      case 0x05: mode = MODE_SPIN_L; break;
+      case 0x06: mode = MODE_SPIN_R; break;
+      case 0x07:  // Set speed
+        while(!BT.available());
+        targetSpeed = BT.read();
+        break;
+      case 0x08:  // Heartbeat
+        break;
+    }
+  }
+
+  // Ramping
+  static unsigned long lastRamp = 0;
+  if (millis() - lastRamp > 15) {
+    lastRamp = millis();
+    int step = (targetSpeed == 0) ? 40 : 10;  // Brake : Acceleleration
+    
+    if (currentSpeed < targetSpeed) currentSpeed = min(currentSpeed + step, targetSpeed);
+    else if (currentSpeed > targetSpeed) currentSpeed = max(currentSpeed - step, targetSpeed);
+    
+    serialDebug(mode, currentSpeed);
+    executeDrive(mode, currentSpeed);
+  }
+}
+
+// Debug
+void serialDebug(MotionMode m, int speed) {
+  static int lastSpeed = -1;
+  static MotionMode lastM = (MotionMode)-1;
+  
+  if (speed != lastSpeed || m != lastM) {
+    Serial.print("Mode: "); Serial.print((int)m);
+    Serial.print(" | Speed: "); Serial.println(speed);
+    lastSpeed = speed;
+    lastM = m;
+  }
+}
+
+
+// Drive
+void executeDrive(MotionMode m, int speed) {
+  motorL.setSpeed(speed);
+  motorR.setSpeed(speed);
+  switch(m) {
+    case MODE_STOP: motorL.run(RELEASE); motorR.run(RELEASE); break;
+    case MODE_FWD: motorL.run(FORWARD); motorR.run(FORWARD); break;
+    case MODE_BWD: motorL.run(BACKWARD); motorR.run(BACKWARD); break;
+    case MODE_PIVOT_L: motorL.run(RELEASE); motorR.run(FORWARD); break;
+    case MODE_PIVOT_R: motorL.run(FORWARD); motorR.run(RELEASE); break;
+    case MODE_SPIN_L: motorL.run(BACKWARD); motorR.run(FORWARD); break;
+    case MODE_SPIN_R: motorL.run(FORWARD); motorR.run(BACKWARD); break;
+  }
+}
