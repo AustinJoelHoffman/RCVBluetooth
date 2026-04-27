@@ -9,7 +9,7 @@
 <h2>Project Concept Map:</h2>
 
 
-<img width="1518" height="1100" alt="concept_map_2" src="https://github.com/user-attachments/assets/4cf16ed4-f297-4a71-b1dc-02b3d9d6c449" />
+<img width="1518" height="1100" alt="Concept Map 2" src="https://github.com/user-attachments/assets/e849aeda-fd17-4d86-8229-fb515a36ba55" />
 <br>
 
 <h2>Arduino Firmware Files:</h2>
